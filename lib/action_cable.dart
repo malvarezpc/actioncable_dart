@@ -15,6 +15,7 @@ class ActionCable {
   Timer? _timer;
   IOWebSocketChannel? _socketChannel;
   StreamSubscription? _listener;
+  int _pingRetries = 0;
 
   final OnConnectedFunction? onConnected;
   final OnConnectionLostFunction? onConnectionLost;
@@ -81,8 +82,12 @@ class ActionCable {
   void _healthCheck(Timer timer) {
     if (_lastPing == null) return;
     if (DateTime.now().difference(_lastPing!) > const Duration(seconds: 6)) {
-      disconnect();
-      onConnectionLost?.call();
+      if (_pingRetries > 1) {
+        disconnect();
+        onConnectionLost?.call();
+      } else {
+        _pingRetries++;
+      }
     }
   }
 
